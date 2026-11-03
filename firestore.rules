@@ -2,11 +2,41 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // One shared board, readable and writable only by the shared Google account.
+    function signedIn() {
+      return request.auth != null && request.auth.token.email_verified == true;
+    }
+    function me() {
+      return request.auth.token.email.lower();
+    }
+
+    // Each project board is one document, shared with the Gmail addresses in `members`.
     match /boards/{boardId} {
-      allow read, write: if request.auth != null
-        && request.auth.token.email == "adityashanthi24@gmail.com"
-        && request.auth.token.email_verified == true;
+      // The old single shared board, kept read-only as a backup for the first move.
+      allow read: if boardId == 'main' && signedIn()
+        && me() == 'adityashanthi24@gmail.com';
+
+      allow read: if boardId != 'main' && signedIn()
+        && me() in resource.data.members;
+
+      allow create: if boardId != 'main' && signedIn()
+        && request.resource.data.owner == me()
+        && request.resource.data.members == [me()];
+
+      // Members edit cards and titles. Only the owner changes who is shared;
+      // anyone else may only remove themselves.
+      allow update: if signedIn()
+        && me() in resource.data.members
+        && request.resource.data.owner == resource.data.owner
+        && (request.resource.data.members == resource.data.members
+          || (resource.data.owner == me() && me() in request.resource.data.members)
+          || request.resource.data.members == resource.data.members.removeAll([me()]));
+
+      allow delete: if signedIn() && resource.data.owner == me();
+    }
+
+    // Each person's own board order.
+    match /users/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
     }
   }
 }
