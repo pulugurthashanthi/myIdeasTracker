@@ -89,11 +89,20 @@ function applySnapshot(snap){
   openLinkedBoard();
 }
 
-// A #board=ID link opens that board once it has synced.
+// #b=CODE (short, from share.js) or #board=ID; CODE is the base-36 timestamp of a t123 id,
+// or ~ followed by any other id.
+function linkedBoardId(){
+  let m=location.hash.match(/^#board=([^&]+)$/);
+  if(m)return decodeURIComponent(m[1]);
+  m=location.hash.match(/^#b=(~?)([^&]+)$/);
+  if(!m)return '';
+  return m[1]?decodeURIComponent(m[2]):'t'+parseInt(m[2],36);
+}
+
+// A board link opens that board once it has synced.
 function openLinkedBoard(){
-  const m=location.hash.match(/^#board=([^&]+)$/);
-  if(!m)return;
-  const id=decodeURIComponent(m[1]);
+  const id=linkedBoardId();
+  if(!id)return;
   if(!state.topics.some(t=>t.id===id)){showBar('This board is not shared with '+email+'. Ask the owner to add this Gmail.','Sign out',()=>signOut(auth));return}
   history.replaceState(null,'',location.pathname);
   openProject(id);
@@ -117,7 +126,7 @@ onAuthStateChanged(auth,async user=>{
   window.cloudSave=null;known=new Map();lastOrder='';userOrder=[];
   // Old #project= links are read-only snapshots; send people to the live tracker to sign in.
   if(isShared){showBar('This is an old read-only link. Open the tracker and sign in to see boards shared with you.','Open tracker',()=>{location.href=location.origin+location.pathname});return}
-  if(!user){email=uid='';showBar(location.hash.startsWith('#board=')?'Sign in with Google to open this shared board.':'Not synced. Sign in to sync and share boards.','Sign in with Google',signIn);return}
+  if(!user){email=uid='';showBar(/^#b(oard)?=/.test(location.hash)?'Sign in with Google to open this shared board.':'Not synced. Sign in to sync and share boards.','Sign in with Google',signIn);return}
   email=user.email.toLowerCase();uid=user.uid;
   showBar('Syncing…','Sign out',()=>signOut(auth));
   const prefs=await getDoc(doc(db,'users',uid)).catch(()=>null);

@@ -66,7 +66,9 @@
   $$('#shareEmail').onkeydown=e=>{if(e.key==='Enter')$$('#shareAddBtn').click()};
   // The link opens this board after they sign in with the Gmail they were added with.
   $$('#shareCopy').onclick=async()=>{
-    const url=location.origin+location.pathname+'#board='+encodeURIComponent(topicId);
+    // Board ids are t + a timestamp; base 36 makes the link about half as long.
+    const code=/^t\d+$/.test(topicId)?Number(topicId.slice(1)).toString(36):'~'+encodeURIComponent(topicId);
+    const url=location.origin+location.pathname+'#b='+code;
     try{await navigator.clipboard.writeText(url);toast('Link copied. They sign in with the Gmail you added.')}
     catch{window.prompt('Copy this link:',url)}
   };
