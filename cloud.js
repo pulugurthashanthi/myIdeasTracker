@@ -128,7 +128,10 @@ onAuthStateChanged(auth,async user=>{
   window.cloudSave=null;known=new Map();lastOrder='';userOrder=[];
   // Old #project= links are read-only snapshots; send people to the live tracker to sign in.
   if(isShared){showBar('This is an old read-only link. Open the tracker and sign in to see boards shared with you.','Open tracker',()=>{location.href=location.origin+location.pathname});return}
-  if(!user){email=uid='';showBar(/^#b(oard)?=/.test(location.hash)?'Sign in with Google to open this shared board.':'Not synced. Sign in to sync and share boards.','Sign in with Google',signIn);return}
+  const viaLink=/^#b(oard)?=/.test(location.hash);
+  // Signed out on a board link: hide this browser's own local boards so they aren't mistaken for the shared one.
+  if(viaLink)document.querySelector('#home').hidden=!user;
+  if(!user){email=uid='';showBar(viaLink?'Sign in with Google to open this shared board.':'Not synced. Sign in to sync and share boards.','Sign in with Google',signIn);return}
   email=user.email.toLowerCase();uid=user.uid;
   showBar('Syncing…','Sign out',()=>signOut(auth));
   const prefs=await getDoc(doc(db,'users',uid)).catch(()=>null);
