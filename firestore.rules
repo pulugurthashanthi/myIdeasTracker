@@ -1,0 +1,12 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // One shared board, readable and writable only by the shared Google account.
+    match /boards/{boardId} {
+      allow read, write: if request.auth != null
+        && request.auth.token.email == "adityashanthi24@gmail.com"
+        && request.auth.token.email_verified == true;
+    }
+  }
+}
