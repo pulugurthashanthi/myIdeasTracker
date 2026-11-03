@@ -34,6 +34,8 @@ let unsubscribe=null,email='',uid='';
 // id -> {owner, members, key}; key is the last content we saw or saved, to skip unchanged boards.
 let known=new Map(),lastOrder='',userOrder=[];
 
+// Signing out also forgets this browser's copy, so the next person sees nothing.
+function logOut(){localStorage.removeItem(KEY);state={topics:[],ideas:[]};signOut(auth)}
 function signIn(){signInWithPopup(auth,new GoogleAuthProvider()).catch(e=>showBar('Sign-in failed: '+e.code,'Try again',signIn))}
 const boardRef=id=>doc(db,'boards',id);
 const cardsOf=(s,id)=>s.ideas.filter(i=>i.topicId===id).map(({topicId,...c})=>c);
@@ -85,7 +87,7 @@ function applySnapshot(snap){
   if(selectedTopic&&!state.topics.some(t=>t.id===selectedTopic))document.querySelector('#backBtn').click();
   renderHome();
   if(!document.querySelector('#projectDetail').hidden)renderKanban();
-  showBar('Synced ✓ '+email,'Sign out',()=>signOut(auth));
+  showBar('Synced ✓ '+email,'Sign out',logOut);
   openLinkedBoard();
 }
 
@@ -103,7 +105,7 @@ function linkedBoardId(){
 function openLinkedBoard(){
   const id=linkedBoardId();
   if(!id)return;
-  if(!state.topics.some(t=>t.id===id)){showBar('This board is not shared with '+email+'. Ask the owner to add this Gmail.','Sign out',()=>signOut(auth));return}
+  if(!state.topics.some(t=>t.id===id)){showBar('This board is not shared with '+email+'. Ask the owner to add this Gmail.','Sign out',logOut);return}
   history.replaceState(null,'',location.pathname);
   openProject(id);
 }
@@ -129,11 +131,15 @@ onAuthStateChanged(auth,async user=>{
   // Old #project= links are read-only snapshots; send people to the live tracker to sign in.
   if(isShared){showBar('This is an old read-only link. Open the tracker and sign in to see boards shared with you.','Open tracker',()=>{location.href=location.origin+location.pathname});return}
   const viaLink=/^#b(oard)?=/.test(location.hash);
-  // Signed out on a board link: hide this browser's own local boards so they aren't mistaken for the shared one.
-  if(viaLink)document.querySelector('#home').hidden=!user;
-  if(!user){email=uid='';showBar(viaLink?'Sign in with Google to open this shared board.':'Not synced. Sign in to sync and share boards.','Sign in with Google',signIn);return}
+  if(!user){
+    email=uid='';
+    // Nothing is shown until someone signs in.
+    document.querySelector('#home').hidden=true;document.querySelector('#projectDetail').hidden=true;
+    showBar(viaLink?'Sign in with Google to open this shared board.':'Sign in with Google to see your boards.','Sign in with Google',signIn);return;
+  }
+  if(document.querySelector('#projectDetail').hidden)document.querySelector('#home').hidden=false;
   email=user.email.toLowerCase();uid=user.uid;
-  showBar('Syncing…','Sign out',()=>signOut(auth));
+  showBar('Syncing…','Sign out',logOut);
   const prefs=await getDoc(doc(db,'users',uid)).catch(()=>null);
   userOrder=prefs&&prefs.exists()?prefs.data().order||[]:[];
   let first=true;

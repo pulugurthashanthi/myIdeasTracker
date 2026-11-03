@@ -2,6 +2,8 @@
 // Uses window.cloudShare from cloud.js. Loaded after the main script, so it can wrap
 // renderHome and replace shareProject (old #project= links only use readSharedProject).
 (function(){
+  // Boards stay hidden until cloud.js confirms a sign-in.
+  if(!isShared)document.querySelector('#home').hidden=true;
   const css=document.createElement('style');
   css.textContent=`
 .people-badge{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:999px;background:#ffffffcc;border:1px solid #0000001a;font-size:12px;font-weight:600;color:#3b4740;white-space:nowrap}
