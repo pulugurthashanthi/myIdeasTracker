@@ -23,7 +23,7 @@
 <div id="shareAddRow"><label for="shareEmail">Add by Gmail</label>
 <div class="share-add"><input id="shareEmail" type="email" inputmode="email" autocomplete="off" placeholder="name@gmail.com"><button class="btn primary" id="shareAddBtn">Add</button></div></div>
 <p class="share-error" id="shareError" role="alert"></p>
-<div style="display:flex;justify-content:space-between;gap:8px;margin-top:8px"><button class="btn" id="shareCopy">Copy tracker link</button><button class="btn" id="shareClose">Close</button></div></section>`;
+<div style="display:flex;justify-content:space-between;gap:8px;margin-top:8px"><button class="btn" id="shareCopy">Copy board link</button><button class="btn" id="shareClose">Close</button></div></section>`;
   document.body.append(shade);
   const $$=s=>shade.querySelector(s);
   let topicId='';
@@ -64,9 +64,9 @@
 
   $$('#shareAddBtn').onclick=()=>run(cs().add(topicId,$$('#shareEmail').value)).then(ok=>{if(ok)$$('#shareEmail').value=''});
   $$('#shareEmail').onkeydown=e=>{if(e.key==='Enter')$$('#shareAddBtn').click()};
-  // People open the tracker itself and sign in with the Gmail they were added with.
+  // The link opens this board after they sign in with the Gmail they were added with.
   $$('#shareCopy').onclick=async()=>{
-    const url=location.origin+location.pathname;
+    const url=location.origin+location.pathname+'#board='+encodeURIComponent(topicId);
     try{await navigator.clipboard.writeText(url);toast('Link copied. They sign in with the Gmail you added.')}
     catch{window.prompt('Copy this link:',url)}
   };

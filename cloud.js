@@ -86,6 +86,17 @@ function applySnapshot(snap){
   renderHome();
   if(!document.querySelector('#projectDetail').hidden)renderKanban();
   showBar('Synced ✓ '+email,'Sign out',()=>signOut(auth));
+  openLinkedBoard();
+}
+
+// A #board=ID link opens that board once it has synced.
+function openLinkedBoard(){
+  const m=location.hash.match(/^#board=([^&]+)$/);
+  if(!m)return;
+  const id=decodeURIComponent(m[1]);
+  if(!state.topics.some(t=>t.id===id)){showBar('This board is not shared with '+email+'. Ask the owner to add this Gmail.','Sign out',()=>signOut(auth));return}
+  history.replaceState(null,'',location.pathname);
+  openProject(id);
 }
 
 // Sharing, for the share screen in index.html.
@@ -106,7 +117,7 @@ onAuthStateChanged(auth,async user=>{
   window.cloudSave=null;known=new Map();lastOrder='';userOrder=[];
   // Old #project= links are read-only snapshots; send people to the live tracker to sign in.
   if(isShared){showBar('This is an old read-only link. Open the tracker and sign in to see boards shared with you.','Open tracker',()=>{location.href=location.origin+location.pathname});return}
-  if(!user){email=uid='';showBar('Not synced. Sign in to sync and share boards.','Sign in with Google',signIn);return}
+  if(!user){email=uid='';showBar(location.hash.startsWith('#board=')?'Sign in with Google to open this shared board.':'Not synced. Sign in to sync and share boards.','Sign in with Google',signIn);return}
   email=user.email.toLowerCase();uid=user.uid;
   showBar('Syncing…','Sign out',()=>signOut(auth));
   const prefs=await getDoc(doc(db,'users',uid)).catch(()=>null);
