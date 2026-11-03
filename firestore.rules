@@ -12,11 +12,12 @@ service cloud.firestore {
     // Each project board is one document, shared with the Gmail addresses in `members`.
     match /boards/{boardId} {
       // The old single shared board, kept read-only as a backup for the first move.
-      allow read: if boardId == 'main' && signedIn()
+      allow get: if boardId == 'main' && signedIn()
         && me() == 'adityashanthi24@gmail.com';
 
-      allow read: if boardId != 'main' && signedIn()
-        && me() in resource.data.members;
+      // Listing must not depend on boardId, or Firestore rejects the whole query.
+      allow get, list: if signedIn()
+        && request.auth.token.email in resource.data.members;
 
       allow create: if boardId != 'main' && signedIn()
         && request.resource.data.owner == me()
