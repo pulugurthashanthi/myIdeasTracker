@@ -104,7 +104,8 @@ window.cloudShare={
 onAuthStateChanged(auth,async user=>{
   if(unsubscribe){unsubscribe();unsubscribe=null}
   window.cloudSave=null;known=new Map();lastOrder='';userOrder=[];
-  if(isShared)return; // old #project= links stay read-only and local
+  // Old #project= links are read-only snapshots; send people to the live tracker to sign in.
+  if(isShared){showBar('This is an old read-only link. Open the tracker and sign in to see boards shared with you.','Open tracker',()=>{location.href=location.origin+location.pathname});return}
   if(!user){email=uid='';showBar('Not synced. Sign in to sync and share boards.','Sign in with Google',signIn);return}
   email=user.email.toLowerCase();uid=user.uid;
   showBar('Syncing…','Sign out',()=>signOut(auth));
