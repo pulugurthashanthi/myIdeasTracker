@@ -93,3 +93,6 @@
   shareProject=open;
   document.querySelectorAll('#shareProjectBtn').forEach(b=>b.onclick=()=>open(selectedTopic));
 })();
+
+// sw.js makes every visit load the latest version instead of a cached one.
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).catch(()=>{});

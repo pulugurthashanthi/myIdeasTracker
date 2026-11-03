@@ -107,6 +107,8 @@ function openLinkedBoard(){
   history.replaceState(null,'',location.pathname);
   openProject(id);
 }
+// A link pasted into a tab that is already open only changes the hash.
+window.addEventListener('hashchange',()=>{if(email&&known.size)openLinkedBoard()});
 
 // Sharing, for the share screen in index.html.
 window.cloudShare={
