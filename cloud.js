@@ -17,9 +17,11 @@ const auth=getAuth(app),db=getFirestore(app),board=doc(db,'boards','main');
 
 // Small status bar at the top: sign-in button, sync state, errors.
 const bar=document.createElement('div');
-bar.style.cssText='position:sticky;top:0;z-index:50;display:flex;gap:8px;align-items:center;justify-content:space-between;padding:8px 12px;background:#f3f1ea;border-bottom:1px solid #ddd;font:14px system-ui,sans-serif';
+bar.style.cssText='position:sticky;top:0;z-index:50;display:flex;gap:8px;align-items:center;justify-content:space-between;padding:8px 12px;background:#f3f5f7;border-bottom:1px solid #ddd;font:14px system-ui,sans-serif;color:#27312b';
 document.body.prepend(bar);
 function showBar(text,button,onClick){
+  const lower=text.toLowerCase();
+  bar.style.background=lower.startsWith('synced')?'#dff3e5':(lower.includes('error')||lower.includes('failed'))?'#fde2e1':'#f1f3f6';
   bar.innerHTML='';
   const t=document.createElement('span');t.textContent=text;bar.append(t);
   if(button){const b=document.createElement('button');b.className='btn';b.textContent=button;b.onclick=onClick;bar.append(b)}
